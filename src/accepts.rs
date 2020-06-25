@@ -33,16 +33,13 @@ pub fn enum_body(name: &str, variants: &[Variant]) -> Tokens {
 
         match *type_.kind() {
             ::postgres::types::Kind::Enum(ref variants) => {
-                if variants.len() != #num_variants {
-                    return false;
-                }
-
                 variants.iter().all(|v| {
                     match &**v {
                         #(
                             #variant_names => true,
                         )*
-                        _ => false,
+                        // Allow extra variants at the type level
+                        _ => true,
                     }
                 })
             }
@@ -65,7 +62,8 @@ pub fn composite_body(name: &str, trait_: &str, fields: &[Field]) -> Tokens {
 
         match *type_.kind() {
             ::postgres::types::Kind::Composite(ref fields) => {
-                if fields.len() != #num_fields {
+                // If the composite has more fields than the rust type, allow it but ignore the extras
+                if fields.len() < #num_fields {
                     return false;
                 }
 
@@ -76,7 +74,8 @@ pub fn composite_body(name: &str, trait_: &str, fields: &[Field]) -> Tokens {
                                 <#field_types as ::postgres::types::#traits>::accepts(f.type_())
                             }
                         )*
-                        _ => false,
+                        // Allow extra fields in accepts.
+                        _ => true,
                     }
                 })
             }
