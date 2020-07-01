@@ -138,6 +138,7 @@ fn composite_body(ident: &Ident, fields: &[Field]) -> Tokens {
 
         let mut buf = buf;
         let num_fields = read_be_i32(&mut buf)?;
+        //Allow extra fields
         if num_fields as usize != fields.len() {
             return ::std::result::Result::Err(
                 ::std::convert::Into::into(format!("invalid field count: {} vs {}", num_fields,
@@ -161,7 +162,8 @@ fn composite_body(ident: &Ident, fields: &[Field]) -> Tokens {
                             read_value(field.type_(), &mut buf)?);
                     }
                 )*
-                _ => unreachable!(),
+                //Ignore extra fields
+                _ => (),
             }
         }
 

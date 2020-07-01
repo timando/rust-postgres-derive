@@ -33,7 +33,11 @@ pub fn enum_body(name: &str, variants: &[Variant]) -> Tokens {
 
         match *type_.kind() {
             ::postgres::types::Kind::Enum(ref variants) => {
-                if variants.len() != #num_variants {
+                //Normally we want to reject enums that don't perfectly match,
+                //but because this is a lenient version, don't reject if the
+                //number of variants doesn't match
+                //
+                if variants.len() != #num_variants && false{
                     return false;
                 }
 
@@ -42,10 +46,12 @@ pub fn enum_body(name: &str, variants: &[Variant]) -> Tokens {
                         #(
                             #variant_names => true,
                         )*
-                        _ => false,
+                        //Allow extra variants
+                        _ => true,
                     }
                 })
             }
+            //Still only allow enums though
             _ => false,
         }
     }
@@ -65,7 +71,8 @@ pub fn composite_body(name: &str, trait_: &str, fields: &[Field]) -> Tokens {
 
         match *type_.kind() {
             ::postgres::types::Kind::Composite(ref fields) => {
-                if fields.len() != #num_fields {
+                //Allow extra fields
+                if fields.len() < #num_fields {
                     return false;
                 }
 
@@ -76,7 +83,8 @@ pub fn composite_body(name: &str, trait_: &str, fields: &[Field]) -> Tokens {
                                 <#field_types as ::postgres::types::#traits>::accepts(f.type_())
                             }
                         )*
-                        _ => false,
+                        //Allow extra fields
+                        _ => true,
                     }
                 })
             }
